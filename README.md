@@ -17,7 +17,8 @@ Inspired by the `angelAudioKeeper` NVDA add-on created by **Angels Clan**, VDH_A
   - [2. Settings Dialog Configuration](#2-settings-dialog-configuration)
 - [Configuration & Logging](#-configuration--logging)
 - [How It Works (Technical Highlights)](#-how-it-works-technical-highlights)
-- [License & Acknowledgments](#-license--acknowledgments)
+- [Special Thanks & Motivation](#-special-thanks--motivation)
+- [License](#-license)
 
 ---
 
@@ -147,8 +148,24 @@ VDH_Audio_Keeper includes a built-in rotating logger (max 512KB per file, up to 
 
 ---
 
-## 📄 License & Acknowledgments
+## ❤️ Special Thanks & Motivation
 
-- **Inspiration**: Inspired by the `angelAudioKeeper` NVDA add-on by developer **Angels Clan**.
-- **License**: Distributed under the terms of the GNU General Public License v3.0 ([GPL-3.0](LICENSE)).
+### Deep Gratitude to the Original Author
+We would like to express our deepest appreciation and heartfelt gratitude to **[Angels Clan](https://github.com/AngelsClan)**, creator of [**angel-audio-keeper**](https://github.com/AngelsClan/angel-audio-keeper). 
+
+The original `angelAudioKeeper` was developed as a wonderful add-on for the NVDA screen reader, solving a critical problem that tormented many users: Bluetooth audio devices, USB DACs, and wireless speakers cutting off the initial milliseconds of speech or system sounds due to aggressive power-saving sleep modes. Angels Clan's innovative approach and selfless dedication to open-source software provided the spark of inspiration for this project.
+
+### Why VDH_Audio_Keeper Was Developed
+While `angelAudioKeeper` provided an incredible solution for NVDA screen reader users, we recognized the need for a **standalone, system-wide Windows desktop application** that could operate independently without requiring NVDA:
+- **Universal Availability**: Accessible to all Windows users—whether they use screen readers, work in audio production, or simply use Bluetooth headphones for daily tasks, watching videos, or gaming.
+- **Standalone System Tray Application**: Operates quietly in the Windows Notification Area with full tray icon controls, an easy-to-use graphical settings window, fine-tuned volume controls, dynamic audio output device switching, and auto-start on Windows boot.
+- **Native Core Audio Engine**: Built from the ground up as a native Python background utility utilizing direct Windows Core Audio (WASAPI) shared render streams.
+
+Without the foundational idea, vision, and open-source contribution of **Angels Clan**, this standalone application would not exist. Thank you, Angels Clan, for your creativity and for making audio playback seamless for the entire community! 🌟
+
+---
+
+## 📄 License
+
+Distributed under the terms of the GNU General Public License v3.0 ([GPL-3.0](LICENSE)).
 

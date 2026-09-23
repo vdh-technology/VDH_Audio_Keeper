@@ -5,11 +5,12 @@ from .config import SettingsStore, get_autostart_status
 
 class SettingsDialog(wx.Dialog):
     def __init__(self, parent, store: SettingsStore, engine):
-        super().__init__(parent, title="Settings - VDH_Audio_Keeper", size=(440, 310),
+        super().__init__(parent, title="Settings - VDH_Audio_Keeper", size=wx.Size(440, 360),
                          style=wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
         self.store = store
         self.engine = engine
         self.device_ids = []
+        self.signal_types = ["white_noise", "sub_bass"]
 
         self.InitUI()
         self.LoadSettings()
@@ -31,12 +32,20 @@ class SettingsDialog(wx.Dialog):
         self.choice_device = wx.Choice(self, choices=[])
         content_sizer.Add(self.choice_device, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 8)
 
-        # 3. Noise volume control (0 to 100, default 5)
+        # 3. Signal type selection (White Noise vs Sub-Bass 12Hz Tone)
+        lbl_signal = wx.StaticText(self, label="Keep-alive signal type:")
+        content_sizer.Add(lbl_signal, 0, wx.LEFT | wx.RIGHT | wx.TOP, 8)
+
+        self.choice_signal = wx.Choice(self, choices=["White Noise (Standard Hiss)", "Sub-Bass Tone (12 Hz Inaudible)"])
+        self.choice_signal.SetToolTip("Select signal type: White Noise for standard noise, or Sub-Bass Tone (12Hz) for completely silent audio keep-alive.")
+        content_sizer.Add(self.choice_signal, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 8)
+
+        # 4. Noise volume control (0 to 100, default 5)
         vol_sizer = wx.BoxSizer(wx.HORIZONTAL)
         lbl_volume = wx.StaticText(self, label="Noise volume:")
         self.slider_volume = wx.Slider(self, value=5, minValue=0, maxValue=100, style=wx.SL_HORIZONTAL)
         self.slider_volume.SetToolTip("Adjust background noise volume level from 0 to 100 (default is 5).")
-        self.lbl_volume_val = wx.StaticText(self, label="5%", size=(36, -1), style=wx.ALIGN_RIGHT)
+        self.lbl_volume_val = wx.StaticText(self, label="5%", size=wx.Size(36, -1), style=wx.ALIGN_RIGHT)
 
         vol_sizer.Add(lbl_volume, 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
         vol_sizer.Add(self.slider_volume, 1, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 8)
@@ -44,7 +53,7 @@ class SettingsDialog(wx.Dialog):
 
         content_sizer.Add(vol_sizer, 0, wx.ALL | wx.EXPAND, 8)
 
-        # 4. Start with Windows checkbox
+        # 5. Start with Windows checkbox
         self.chk_autostart = wx.CheckBox(self, label="Start with Windows")
         self.chk_autostart.SetToolTip("Automatically run VDH_Audio_Keeper when Windows boots up.")
         content_sizer.Add(self.chk_autostart, 0, wx.ALL | wx.EXPAND, 8)
@@ -55,7 +64,7 @@ class SettingsDialog(wx.Dialog):
         line = wx.StaticLine(self, wx.ID_ANY)
         main_sizer.Add(line, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 12)
 
-        # 5. OK and Cancel buttons
+        # 6. OK and Cancel buttons
         btn_sizer = wx.StdDialogButtonSizer()
         self.btn_ok = wx.Button(self, wx.ID_OK, "OK")
         self.btn_cancel = wx.Button(self, wx.ID_CANCEL, "Cancel")
@@ -87,6 +96,11 @@ class SettingsDialog(wx.Dialog):
         self.slider_volume.SetValue(vol)
         self.lbl_volume_val.SetLabel(f"{vol}%")
 
+        # Load signal type setting
+        sig_type = data.get("signal_type", "white_noise")
+        sig_idx = self.signal_types.index(sig_type) if sig_type in self.signal_types else 0
+        self.choice_signal.SetSelection(sig_idx)
+
         # Populate audio output devices from WASAPI scan snapshot
         devices = []
         if self.engine:
@@ -111,9 +125,13 @@ class SettingsDialog(wx.Dialog):
         selected_idx = self.choice_device.GetSelection()
         selected_device = self.device_ids[selected_idx] if 0 <= selected_idx < len(self.device_ids) else ""
 
+        sig_idx = self.choice_signal.GetSelection()
+        selected_signal = self.signal_types[sig_idx] if 0 <= sig_idx < len(self.signal_types) else "white_noise"
+
         new_settings = {
             "enabled": self.chk_enable.GetValue(),
             "device": selected_device,
+            "signal_type": selected_signal,
             "volume": self.slider_volume.GetValue(),
             "start_with_windows": self.chk_autostart.GetValue()
         }

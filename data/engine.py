@@ -41,6 +41,7 @@ class Settings:
     enabled: bool = True
     device: str = ""
     volume: int = 5
+    signal_type: str = "white_noise"
     debug: bool = False
 
     @classmethod
@@ -49,6 +50,7 @@ class Settings:
             enabled=bool(data.get("enabled", True)),
             device=str(data.get("device", "")),
             volume=max(0, min(100, int(data.get("volume", 5)))),
+            signal_type=str(data.get("signal_type", "white_noise")),
             debug=bool(data.get("debug", False))
         )
 
@@ -136,11 +138,14 @@ class Engine:
                 now = time.monotonic()
                 if settings != applied:
                     self.logger.setLevel(logging.DEBUG if settings.debug else logging.INFO)
-                    if stream and (not settings.enabled or settings.device != applied.device):
-                        self._close_stream(stream, noise, smooth=True)
-                        stream = noise = None
-                    self.logger.info("Settings update: enabled=%s device=%s volume=%d",
-                                     settings.enabled, settings.device or "Windows Default", settings.volume)
+                    if stream:
+                        if not settings.enabled or settings.device != (applied.device if applied else ""):
+                            self._close_stream(stream, noise, smooth=True)
+                            stream = noise = None
+                        elif applied and settings.signal_type != applied.signal_type:
+                            noise = Noise(stream.format, 100, signal_type=settings.signal_type)
+                    self.logger.info("Settings update: enabled=%s device=%s volume=%d signal_type=%s",
+                                     settings.enabled, settings.device or "Windows Default", settings.volume, settings.signal_type)
                     applied = settings
                     next_retry = next_check = 0
                     retry_delay = 1
@@ -162,7 +167,7 @@ class Engine:
                         stream = self.backend.RenderStream(system, settings.device)
                         stream.set_volume(settings.volume)
                         volume_applied = settings.volume
-                        noise = Noise(stream.format, 100)
+                        noise = Noise(stream.format, 100, signal_type=settings.signal_type)
                         stream.write(noise.take(stream.capacity))
                         frames += stream.capacity
                         buffers += 1

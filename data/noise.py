@@ -1,6 +1,7 @@
 """Small, format-aware noise generator for VDH_Audio_Keeper."""
 from dataclasses import dataclass
 from array import array
+import math
 import random
 import struct
 
@@ -39,22 +40,35 @@ class AudioFormat:
 
 
 class Noise:
-    """Bounded circular pool with separately generated noise for every channel."""
-    def __init__(self, fmt, volume, seed=None):
+    """Bounded circular pool with separately generated signal for every channel."""
+    def __init__(self, fmt, volume, signal_type="white_noise", seed=None):
         self.fmt = fmt
         self.volume = max(0, min(100, int(volume)))
+        self.signal_type = signal_type if signal_type in ("white_noise", "sub_bass") else "white_noise"
         gain = self.volume / 10000.0
         self._integer_peak = int(gain * ((1 << ((fmt.valid_bits or fmt.bits) - 1)) - 1))
         rng = random.Random(seed)
         self.rng = rng
         self.pool_frames = min(fmt.rate, 48000, 192000 // fmt.channels)
         self.samples = []
-        for channel in range(fmt.channels):
-            samples = array("d", (rng.uniform(-gain, gain) for _ in range(self.pool_frames)))
-            mean = sum(samples) / self.pool_frames
-            for index in range(self.pool_frames):
-                samples[index] = max(-gain, min(gain, samples[index] - mean))
-            self.samples.append(samples)
+
+        if self.signal_type == "sub_bass":
+            # Generate 12Hz inaudible sub-bass sine wave tone
+            freq = 12.0
+            for channel in range(fmt.channels):
+                samples = array("d", (
+                    math.sin(2.0 * math.pi * freq * index / fmt.rate) * gain
+                    for index in range(self.pool_frames)
+                ))
+                self.samples.append(samples)
+        else:
+            # Generate uniform random white noise
+            for channel in range(fmt.channels):
+                samples = array("d", (rng.uniform(-gain, gain) for _ in range(self.pool_frames)))
+                mean = sum(samples) / self.pool_frames
+                for index in range(self.pool_frames):
+                    samples[index] = max(-gain, min(gain, samples[index] - mean))
+                self.samples.append(samples)
         self.position = 0
         self.ramp_frames = max(1, int(fmt.rate * 0.05))
         self.frames_sent = 0

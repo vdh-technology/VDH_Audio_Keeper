@@ -39,6 +39,7 @@ VDH_Audio_Keeper solves this issue by running quietly in the background and stre
 - **System Tray Native**: Runs silently in the notification area without taskbar clutter.
 - **Dynamic Device Tracking**: Follows the active Windows Default Output Device automatically, or allows locking to a specific audio hardware device.
 - **Adjustable Volume Level**: Fine-tune background noise level slider (0% to 100%, default 5%) for complete transparency.
+- **Flexible Signal Types**: Choose between standard **White Noise** (subtle hiss) or inaudible **Sub-Bass Tone (12 Hz)** for completely silent keep-alive.
 - **Auto-Start with Windows**: Integrated Windows Registry setting to automatically launch on boot up.
 - **Single-Instance Protection**: Prevents duplicate instances from launching simultaneously.
 - **Smooth Stream Recovery**: Automatically reconnects and recovers if audio devices are plugged in/unplugged or system sleeps.
@@ -106,6 +107,7 @@ Double-clicking the tray icon opens the **Settings** window:
 | :--- | :--- | :--- |
 | **Enable continuous audio** | Master toggle to turn the audio keeper engine ON or OFF. | **Checked (Enabled)** |
 | **Audio output device** | Select target device: **Default output device** (automatically tracks active default audio device) or a specific listed audio output device. | **Default output device** for general use, or select your specific Bluetooth headset/DAC. |
+| **Keep-alive signal type** | Select between **White Noise (Standard Hiss)** or **Sub-Bass Tone (12 Hz Inaudible)** for silent keep-alive playback. | **Sub-Bass Tone (12 Hz Inaudible)** for silent operation, or **White Noise** for standard background noise. |
 | **Noise volume** | Slider ranging from **0% to 100%** (default is **5%**). Controls signal strength. | **5%** (Or lower down to 1-2% if audible on high-gain headphones). |
 | **Start with Windows** | Enables automatic startup when Windows boots by writing to Windows Registry `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`. | **Checked** for hands-off background operation. |
 
@@ -127,6 +129,7 @@ Example configuration:
 {
   "enabled": true,
   "device": "",
+  "signal_type": "sub_bass",
   "volume": 5,
   "start_with_windows": true
 }

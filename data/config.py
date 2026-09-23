@@ -14,6 +14,7 @@ DEFAULTS = {
     "enabled": True,
     "device": "",
     "volume": 5,
+    "signal_type": "white_noise",
     "start_with_windows": False
 }
 

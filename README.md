@@ -168,7 +168,6 @@ Without the foundational idea, vision, and open-source contribution of **Angels 
 
 ---
 
+
 ## 📄 License
-
-Distributed under the terms of the GNU General Public License v3.0 ([GPL-3.0](LICENSE)).
-
+This project is licensed under the [GNU General Public License v3.0 (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.html).

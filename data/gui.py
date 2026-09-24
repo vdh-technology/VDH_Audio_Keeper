@@ -10,7 +10,7 @@ class SettingsDialog(wx.Dialog):
         self.store = store
         self.engine = engine
         self.device_ids = []
-        self.signal_types = ["white_noise", "sub_bass"]
+        self.signal_types = ["white_noise", "sub_bass", "pink_noise", "brown_noise", "high_frequency"]
 
         self.InitUI()
         self.LoadSettings()
@@ -32,12 +32,18 @@ class SettingsDialog(wx.Dialog):
         self.choice_device = wx.Choice(self, choices=[])
         content_sizer.Add(self.choice_device, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 8)
 
-        # 3. Signal type selection (White Noise vs Sub-Bass 12Hz Tone)
+        # 3. Signal type selection
         lbl_signal = wx.StaticText(self, label="Keep-alive signal type:")
         content_sizer.Add(lbl_signal, 0, wx.LEFT | wx.RIGHT | wx.TOP, 8)
 
-        self.choice_signal = wx.Choice(self, choices=["White Noise (Standard Hiss)", "Sub-Bass Tone (12 Hz Inaudible)"])
-        self.choice_signal.SetToolTip("Select signal type: White Noise for standard noise, or Sub-Bass Tone (12Hz) for completely silent audio keep-alive.")
+        self.choice_signal = wx.Choice(self, choices=[
+            "White Noise (Standard Hiss)",
+            "Sub-Bass Tone (12 Hz Inaudible)",
+            "Pink Noise (Soft Rain Hiss)",
+            "Brown Noise (Deep Bass Wave)",
+            "High-Frequency Tone (19.5 kHz Inaudible)"
+        ])
+        self.choice_signal.SetToolTip("Select signal type: White Noise, Sub-Bass (12Hz), Pink Noise, Brown Noise, or High-Frequency (19.5kHz) for keep-alive playback.")
         content_sizer.Add(self.choice_signal, 0, wx.LEFT | wx.RIGHT | wx.BOTTOM | wx.EXPAND, 8)
 
         # 4. Noise volume control (0 to 100, default 5)

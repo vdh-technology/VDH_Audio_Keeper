@@ -44,7 +44,8 @@ class Noise:
     def __init__(self, fmt, volume, signal_type="white_noise", seed=None):
         self.fmt = fmt
         self.volume = max(0, min(100, int(volume)))
-        self.signal_type = signal_type if signal_type in ("white_noise", "sub_bass") else "white_noise"
+        valid_types = ("white_noise", "sub_bass", "pink_noise", "brown_noise", "high_frequency")
+        self.signal_type = signal_type if signal_type in valid_types else "white_noise"
         gain = self.volume / 10000.0
         self._integer_peak = int(gain * ((1 << ((fmt.valid_bits or fmt.bits) - 1)) - 1))
         rng = random.Random(seed)
@@ -61,13 +62,56 @@ class Noise:
                     for index in range(self.pool_frames)
                 ))
                 self.samples.append(samples)
+        elif self.signal_type == "high_frequency":
+            # Generate 19.5kHz inaudible ultra-high frequency sine wave tone
+            # Capped safely at 0.43 * sample_rate to avoid Nyquist aliasing
+            freq = min(19500.0, fmt.rate * 0.43)
+            for channel in range(fmt.channels):
+                samples = array("d", (
+                    math.sin(2.0 * math.pi * freq * index / fmt.rate) * gain
+                    for index in range(self.pool_frames)
+                ))
+                self.samples.append(samples)
+        elif self.signal_type == "pink_noise":
+            # Generate Pink Noise using Paul Kellet's filter (1/f equal energy per octave)
+            for channel in range(fmt.channels):
+                b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0
+                raw_samples = []
+                for _ in range(self.pool_frames):
+                    white = rng.uniform(-1.0, 1.0)
+                    b0 = 0.99886 * b0 + white * 0.0555179
+                    b1 = 0.99332 * b1 + white * 0.0750759
+                    b2 = 0.96900 * b2 + white * 0.1538520
+                    b3 = 0.86650 * b3 + white * 0.3104856
+                    b4 = 0.55000 * b4 + white * 0.5329522
+                    b5 = -0.7616 * b5 - white * 0.0168980
+                    pink = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362
+                    b6 = white * 0.115926
+                    raw_samples.append(pink * 0.11)
+                mean = sum(raw_samples) / self.pool_frames
+                max_amp = max(abs(s - mean) for s in raw_samples) or 1.0
+                samples = array("d", (((s - mean) / max_amp) * gain for s in raw_samples))
+                self.samples.append(samples)
+        elif self.signal_type == "brown_noise":
+            # Generate Brown/Red Noise using leaky integration (1/f^2 deep frequency response)
+            for channel in range(fmt.channels):
+                last_val = 0.0
+                raw_samples = []
+                for _ in range(self.pool_frames):
+                    white = rng.uniform(-1.0, 1.0)
+                    last_val = (last_val + (0.02 * white)) / 1.02
+                    raw_samples.append(last_val * 3.5)
+                mean = sum(raw_samples) / self.pool_frames
+                max_amp = max(abs(s - mean) for s in raw_samples) or 1.0
+                samples = array("d", (((s - mean) / max_amp) * gain for s in raw_samples))
+                self.samples.append(samples)
         else:
             # Generate uniform random white noise
             for channel in range(fmt.channels):
-                samples = array("d", (rng.uniform(-gain, gain) for _ in range(self.pool_frames)))
-                mean = sum(samples) / self.pool_frames
-                for index in range(self.pool_frames):
-                    samples[index] = max(-gain, min(gain, samples[index] - mean))
+                raw_samples = [rng.uniform(-1.0, 1.0) for _ in range(self.pool_frames)]
+                mean = sum(raw_samples) / self.pool_frames
+                max_amp = max(abs(s - mean) for s in raw_samples) or 1.0
+                samples = array("d", (((s - mean) / max_amp) * gain for s in raw_samples))
                 self.samples.append(samples)
         self.position = 0
         self.ramp_frames = max(1, int(fmt.rate * 0.05))
